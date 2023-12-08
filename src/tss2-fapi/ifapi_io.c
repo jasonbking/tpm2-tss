@@ -392,24 +392,50 @@ ifapi_io_remove_directories(
     TSS2_RC r;
     char *path;
     size_t len_kstore_path, len_dir_path, diff_len, pos;
+#if defined(__illumos__)
+    int dirfd;
+#endif
 
     LOG_TRACE("Removing directory: %s", dirname);
 
-    if (!(dir = opendir(dirname))) {
+    if ((dirfd = open(dirname, O_DIRECTORY|O_RDONLY)) < 0) {
+        return_error2(TSS2_FAPI_RC_IO_ERROR, "Could not open directory: %s",
+                      dirname);
+    }
+
+    if (!(dir = fdopendir(dirfd))) {
         return_error2(TSS2_FAPI_RC_IO_ERROR, "Could not open directory: %s",
                       dirname);
     }
 
     /* Iterating through the list of entries inside the directory. */
     while ((entry = readdir(dir)) != NULL) {
+	bool is_dir = false;
+
         LOG_TRACE("Deleting directory entry %s", entry->d_name);
 
         /* Entries . and .. are obviously ignored */
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
             continue;
 
+#if defined(__illumos__)
+	struct stat sb;
+
+	if (fstatat(dirfd, entry->d_name, &sb, AT_SYMLINK_NOFOLLOW) < 0) {
+	    /* XXX: For now just skip */
+	    continue;
+	}
+
+	if (S_ISDIR(sb.st_mode)) {
+		is_dir = true;
+	}
+#else
+	if (entry->d_type == DT_DIR) {
+		is_dir = true;
+	}
+#endif
         /* If an entry is a directory then we call ourself recursively to remove those */
-        if (entry->d_type == DT_DIR) {
+        if (is_dir) {
             r = ifapi_asprintf(&path, "%s/%s", dirname, entry->d_name);
             goto_if_error(r, "Out of memory", error_cleanup);
 
@@ -482,11 +508,21 @@ ifapi_io_dirfiles(
     int numentries = 0;
     struct dirent **namelist;
     size_t numpaths = 0;
+#if defined(__illumos__)
+    int dirfd;
+#endif
     check_not_null(dirname);
     check_not_null(files);
     check_not_null(numfiles);
 
     LOG_TRACE("List directory: %s", dirname);
+
+#if defined(__illumos__)
+    if ((dirfd = open(dirname, O_DIRECTORY|O_RDONLY)) < 0) {
+        return_error2(TSS2_FAPI_RC_IO_ERROR, "Could not open directory: %s",
+                      dirname);
+    }
+#endif
 
     numentries = scandir(dirname, &namelist, NULL, alphasort);
     if (numentries < 0) {
@@ -499,9 +535,21 @@ ifapi_io_dirfiles(
 
     /* Iterating through the list of entries inside the directory. */
     for (size_t i = 0; i < (size_t) numentries; i++) {
+#if defined(__illumos__)
+        struct stat sb;
+#endif
+
         LOG_TRACE("Looking at %s", namelist[i]->d_name);
+
+#if defined(__illumos__)
+        if (fstatat(dirfd, namelist[i]->d_name, &sb, AT_SYMLINK_NOFOLLOW) < 0)
+            continue;
+        if (!S_ISREG(sb.st_mode))
+            continue;
+#else
         if (namelist[i]->d_type != DT_REG)
             continue;
+#endif
 
         paths[numpaths] = strdup(namelist[i]->d_name);
         if (!paths[numpaths])
@@ -519,6 +567,10 @@ ifapi_io_dirfiles(
     }
     free(namelist);
 
+#if defined(__illumos__)
+    close(dirfd);
+#endif
+
     return TSS2_RC_SUCCESS;
 
 error_oom:
@@ -530,6 +582,11 @@ error_oom:
     for (size_t i = 0; i < numpaths; i++)
         free(paths[i]);
     free(paths);
+
+#if defined(__illumos__)
+    close(dirfd);
+#endif
+
     return TSS2_FAPI_RC_MEMORY;
 }
 
@@ -551,15 +608,44 @@ dirfiles_all(const char *dir_name, NODE_OBJECT_T **list, size_t *n)
     TSS2_RC r;
     char *path;
     NODE_OBJECT_T *second;
+#if defined(__illumos__)
+    int dirfd;
+#endif
 
-    if (!(dir = opendir(dir_name))) {
+#if defined(__illumos__)
+    if ((dirfd = open(dir_name, O_DIRECTORY|O_RDONLY)) < 0) {
         return TSS2_RC_SUCCESS;
     }
 
+    if (!(dir = fdopendir(dirfd))) {
+       close(dirfd);
+       return TSS2_RC_SUCCESS;
+    }
+#else
+    if (!(dir = opendir(dir_name))) {
+        return TSS2_RC_SUCCESS;
+    }
+#endif
+
     /* Iterating through the list of entries inside the directory. */
     while ((entry = readdir(dir)) != NULL) {
+#if defined(__illumos__)
+        struct stat sb;
+#endif
+        bool is_dir = false;
+
         path = NULL;
-        if (entry->d_type == DT_DIR) {
+
+#if defined(__illumos__)
+        if (fstatat(dirfd, entry->d_name, &sb, AT_SYMLINK_NOFOLLOW) < 0) {
+            continue;
+        }
+        is_dir = S_ISDIR(sb.st_mode) != 0 ? true : false;
+#else
+	is_dir = (entry->d_type == DT_DIR) ? true : false;
+#endif
+
+        if (is_dir) {
             /* Recursive call for sub directories */
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
