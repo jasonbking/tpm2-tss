@@ -11,8 +11,25 @@
 #if defined(__linux__) || defined(__unix__)
 #if defined(__FreeBSD__)
 #include <sys/endian.h>
+#elif defined(__illumos__)
+#include <sys/byteorder.h>
 #else
 #include <endian.h>
+#endif
+
+#if defined(__illumos__)
+#define	htobe16(value) BE_16(value)
+#define	htobe32(value) BE_32(value)
+#define	htobe64(value) BE_64(value)
+#define	be16toh(value) BE_16(value)
+#define	be32toh(value) BE_32(value)
+#define	be64toh(value) BE_64(value)
+#define	htole16(value) LE_16(value)
+#define	htole32(value) LE_32(value)
+#define	htole64(value) LE_64(value)
+#define	le16toh(value) LE_16(value)
+#define	le32toh(value) LE_32(value)
+#define	le64toh(value) LE_64(value)
 #endif
 
 #define HOST_TO_BE_16(value) htobe16(value)
