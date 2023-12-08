@@ -1,0 +1,517 @@
+# 0 No logging
+# 2 Error
+# 3 Warning
+# 4 Info
+# 5 Debug
+# 6 Trace
+CPPFLAGS += -DMAXLOGLEVEL=5
+
+PWD = .
+SRC = $(PWD)/src
+LIBDIR = $(PWD)/.libs
+
+HEADER_DIR = $(PWD)/include
+OUTPUT_OPTION = -o $@
+
+CPPFLAGS += -I$(HEADER_DIR)/tss2 -I$(PWD)/src
+CFLAGS += -fpic
+LDFLAGS += -L$(LIBDIR) -R$$ORIGIN/../lib
+
+HEADERS = \
+	tss2_common.h \
+	tss2_esys.h \
+	tss2_fapi.h \
+	tss2_mu.h \
+	tss2_policy.h \
+	tss2_rc.h \
+	tss2_sys.h \
+	tss2_tcti_cmd.h \
+	tss2_tcti_device.h \
+	tss2_tcti_i2c_ftdi.h \
+	tss2_tcti_i2c_helper.h \
+	tss2_tcti_libtpms.h \
+	tss2_tcti_mssim.h \
+	tss2_tcti_pcap.h \
+	tss2_tcti_spi_ftdi.h \
+	tss2_tcti_spi_helper.h \
+	tss2_tcti_spi_ltt2go.h \
+	tss2_tcti_swtpm.h \
+	tss2_tcti_tbs.h \
+	tss2_tcti.h \
+	tss2_tctildr.h \
+	tss2_tpm2_types.h
+
+UTIL_DIR = $(SRC)/util
+UTIL_LIB = $(LIBDIR)/util.a
+UTIL_SRCS = key-value-parse.c log.c
+UTIL_OBJS = $(UTIL_SRCS:%.c=$(UTIL_DIR)/%.o)
+
+TSS_MU_DIR = $(SRC)/tss2-mu
+TSS_MU_LIB = $(LIBDIR)/libtss2-mu.so
+TSS_MU_SRCS = \
+	base-types.c \
+	tpm2b-types.c \
+	tpma-types.c \
+	tpml-types.c \
+	tpms-types.c \
+	tpmt-types.c \
+	tpmu-types.c
+TSS_MU_OBJS = $(TSS_MU_SRCS:%.c=$(TSS_MU_DIR)/%.o)
+$(TSS_MU_OBJS) := CFLAGS += -fpic
+$(TSS_MU_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-mu.map
+$(TSS_MU_LIB) := LDLIBS += $(UTIL_LIB)
+
+TSS_SYS_DIR = $(SRC)/tss2-sys
+TSS_SYS_LIB = $(LIBDIR)/libtss2-sys.so
+TSS_SYS_SRCS = \
+	api/Tss2_Sys_AC_GetCapability.c \
+	api/Tss2_Sys_AC_Send.c \
+	api/Tss2_Sys_ACT_SetTimeout.c \
+	api/Tss2_Sys_ActivateCredential.c \
+	api/Tss2_Sys_Certify.c \
+	api/Tss2_Sys_CertifyCreation.c \
+	api/Tss2_Sys_CertifyX509.c \
+	api/Tss2_Sys_ChangeEPS.c \
+	api/Tss2_Sys_ChangePPS.c \
+	api/Tss2_Sys_Clear.c \
+	api/Tss2_Sys_ClearControl.c \
+	api/Tss2_Sys_ClockRateAdjust.c \
+	api/Tss2_Sys_ClockSet.c \
+	api/Tss2_Sys_Commit.c \
+	api/Tss2_Sys_ContextLoad.c \
+	api/Tss2_Sys_ContextSave.c \
+	api/Tss2_Sys_Create.c \
+	api/Tss2_Sys_CreateLoaded.c \
+	api/Tss2_Sys_CreatePrimary.c \
+	api/Tss2_Sys_DictionaryAttackLockReset.c \
+	api/Tss2_Sys_DictionaryAttackParameters.c \
+	api/Tss2_Sys_Duplicate.c \
+	api/Tss2_Sys_EC_Ephemeral.c \
+	api/Tss2_Sys_ECC_Parameters.c \
+	api/Tss2_Sys_ECDH_KeyGen.c \
+	api/Tss2_Sys_ECDH_ZGen.c \
+	api/Tss2_Sys_EncryptDecrypt.c \
+	api/Tss2_Sys_EncryptDecrypt2.c \
+	api/Tss2_Sys_EventSequenceComplete.c \
+	api/Tss2_Sys_EvictControl.c \
+	api/Tss2_Sys_Execute.c \
+	api/Tss2_Sys_FieldUpgradeData.c \
+	api/Tss2_Sys_FieldUpgradeStart.c \
+	api/Tss2_Sys_Finalize.c \
+	api/Tss2_Sys_FirmwareRead.c \
+	api/Tss2_Sys_FlushContext.c \
+	api/Tss2_Sys_GetCapability.c \
+	api/Tss2_Sys_GetCommandAuditDigest.c \
+	api/Tss2_Sys_GetCommandCode.c \
+	api/Tss2_Sys_GetContextSize.c \
+	api/Tss2_Sys_GetCpBuffer.c \
+	api/Tss2_Sys_GetDecryptParam.c \
+	api/Tss2_Sys_GetEncryptParam.c \
+	api/Tss2_Sys_GetRandom.c \
+	api/Tss2_Sys_GetRpBuffer.c \
+	api/Tss2_Sys_GetRspAuths.c \
+	api/Tss2_Sys_GetSessionAuditDigest.c \
+	api/Tss2_Sys_GetTctiContext.c \
+	api/Tss2_Sys_GetTestResult.c \
+	api/Tss2_Sys_GetTime.c \
+	api/Tss2_Sys_Hash.c \
+	api/Tss2_Sys_HashSequenceStart.c \
+	api/Tss2_Sys_HierarchyChangeAuth.c \
+	api/Tss2_Sys_HierarchyControl.c \
+	api/Tss2_Sys_HMAC_Start.c \
+	api/Tss2_Sys_HMAC.c \
+	api/Tss2_Sys_Import.c \
+	api/Tss2_Sys_IncrementalSelfTest.c \
+	api/Tss2_Sys_Initialize.c \
+	api/Tss2_Sys_Load.c \
+	api/Tss2_Sys_LoadExternal.c \
+	api/Tss2_Sys_MAC_Start.c \
+	api/Tss2_Sys_MAC.c \
+	api/Tss2_Sys_MakeCredential.c \
+	api/Tss2_Sys_NV_Certify.c \
+	api/Tss2_Sys_NV_ChangeAuth.c \
+	api/Tss2_Sys_NV_DefineSpace.c \
+	api/Tss2_Sys_NV_Extend.c \
+	api/Tss2_Sys_NV_GlobalWriteLock.c \
+	api/Tss2_Sys_NV_Increment.c \
+	api/Tss2_Sys_NV_Read.c \
+	api/Tss2_Sys_NV_ReadLock.c \
+	api/Tss2_Sys_NV_ReadPublic.c \
+	api/Tss2_Sys_NV_SetBits.c \
+	api/Tss2_Sys_NV_UndefineSpace.c \
+	api/Tss2_Sys_NV_UndefineSpaceSpecial.c \
+	api/Tss2_Sys_NV_Write.c \
+	api/Tss2_Sys_NV_WriteLock.c \
+	api/Tss2_Sys_ObjectChangeAuth.c \
+	api/Tss2_Sys_PCR_Allocate.c \
+	api/Tss2_Sys_PCR_Event.c \
+	api/Tss2_Sys_PCR_Extend.c \
+	api/Tss2_Sys_PCR_Read.c \
+	api/Tss2_Sys_PCR_Reset.c \
+	api/Tss2_Sys_PCR_SetAuthPolicy.c \
+	api/Tss2_Sys_PCR_SetAuthValue.c \
+	api/Tss2_Sys_Policy_AC_SendSelect.c \
+	api/Tss2_Sys_PolicyAuthorize.c \
+	api/Tss2_Sys_PolicyAuthorizeNV.c \
+	api/Tss2_Sys_PolicyAuthValue.c \
+	api/Tss2_Sys_PolicyCommandCode.c \
+	api/Tss2_Sys_PolicyCounterTimer.c \
+	api/Tss2_Sys_PolicyCpHash.c \
+	api/Tss2_Sys_PolicyDuplicationSelect.c \
+	api/Tss2_Sys_PolicyGetDigest.c \
+	api/Tss2_Sys_PolicyLocality.c \
+	api/Tss2_Sys_PolicyNameHash.c \
+	api/Tss2_Sys_PolicyNV.c \
+	api/Tss2_Sys_PolicyNvWritten.c \
+	api/Tss2_Sys_PolicyOR.c \
+	api/Tss2_Sys_PolicyPassword.c \
+	api/Tss2_Sys_PolicyPCR.c \
+	api/Tss2_Sys_PolicyPhysicalPresence.c \
+	api/Tss2_Sys_PolicyRestart.c \
+	api/Tss2_Sys_PolicySecret.c \
+	api/Tss2_Sys_PolicySigned.c \
+	api/Tss2_Sys_PolicyTemplate.c \
+	api/Tss2_Sys_PolicyTicket.c \
+	api/Tss2_Sys_PP_Commands.c \
+	api/Tss2_Sys_Quote.c \
+	api/Tss2_Sys_ReadClock.c \
+	api/Tss2_Sys_ReadPublic.c \
+	api/Tss2_Sys_Rewrap.c \
+	api/Tss2_Sys_RSA_Decrypt.c \
+	api/Tss2_Sys_RSA_Encrypt.c \
+	api/Tss2_Sys_SelfTest.c \
+	api/Tss2_Sys_SequenceComplete.c \
+	api/Tss2_Sys_SequenceUpdate.c \
+	api/Tss2_Sys_SetAlgorithmSet.c \
+	api/Tss2_Sys_SetCmdAuths.c \
+	api/Tss2_Sys_SetCommandCodeAuditStatus.c \
+	api/Tss2_Sys_SetDecryptParam.c \
+	api/Tss2_Sys_SetEncryptParam.c \
+	api/Tss2_Sys_SetPrimaryPolicy.c \
+	api/Tss2_Sys_Shutdown.c \
+	api/Tss2_Sys_Sign.c \
+	api/Tss2_Sys_StartAuthSession.c \
+	api/Tss2_Sys_Startup.c \
+	api/Tss2_Sys_StirRandom.c \
+	api/Tss2_Sys_TestParms.c \
+	api/Tss2_Sys_Unseal.c \
+	api/Tss2_Sys_Vendor_TCG_Test.c \
+	api/Tss2_Sys_VerifySignature.c \
+	api/Tss2_Sys_ZGen_2Phase.c \
+	sysapi_util.c
+TSS_SYS_OBJS = $(TSS_SYS_SRCS:%.c=$(TSS_SYS_DIR)/%.o)
+$(TSS_SYS_OBJS) := CPPFLAGS += -I$(TSS_SYS_DIR)
+$(TSS_SYS_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-sys.map
+$(TSS_SYS_LIB) := LDLIBS += $(UTIL_LIB) -ltss2-mu
+
+#TSS_TCTI_DIR = $(SRC)/tss2-tcti
+#TSS_TCTI_LIB = $(LIBDIR)/libtss2_tcti.so
+#TSS_TCTI_SRCS = \
+	tcti-common.c \
+	tcti-device.c \
+	tcti-pcap-builder.c \
+	tcti-pcap.c \
+	tcti-swtpm.c \
+	tctildr-dl.c \
+	tctildr-nodl.c \
+	tctildr.c
+#TSS_TCTI_OBJS = $(TSS_TCTI_SRCS:%.c=$(TSS_TCTI_DIR)/%.o)
+#$(TSS_TCTI_OBJS) := CFLAGS += -fpic
+#$(TSS_TCTI_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-tcti.map
+#$(TSS_TCTI_LIB) := LDLIBS += $(UTIL_LIB)
+
+TSS_ESYS_DIR = $(SRC)/tss2-esys
+TSS_ESYS_LIB = $(LIBDIR)/libtss2-esys.so
+TSS_ESYS_SRCS = \
+	api/Esys_AC_GetCapability.c \
+	api/Esys_AC_Send.c \
+	api/Esys_ACT_SetTimeout.c \
+	api/Esys_ActivateCredential.c \
+	api/Esys_Certify.c \
+	api/Esys_CertifyCreation.c \
+	api/Esys_CertifyX509.c \
+	api/Esys_ChangeEPS.c \
+	api/Esys_ChangePPS.c \
+	api/Esys_Clear.c \
+	api/Esys_ClearControl.c \
+	api/Esys_ClockRateAdjust.c \
+	api/Esys_ClockSet.c \
+	api/Esys_Commit.c \
+	api/Esys_ContextLoad.c \
+	api/Esys_ContextSave.c \
+	api/Esys_Create.c \
+	api/Esys_CreateLoaded.c \
+	api/Esys_CreatePrimary.c \
+	api/Esys_DictionaryAttackLockReset.c \
+	api/Esys_DictionaryAttackParameters.c \
+	api/Esys_Duplicate.c \
+	api/Esys_EC_Ephemeral.c \
+	api/Esys_ECC_Parameters.c \
+	api/Esys_ECDH_KeyGen.c \
+	api/Esys_ECDH_ZGen.c \
+	api/Esys_EncryptDecrypt.c \
+	api/Esys_EncryptDecrypt2.c \
+	api/Esys_EventSequenceComplete.c \
+	api/Esys_EvictControl.c \
+	api/Esys_FieldUpgradeData.c \
+	api/Esys_FieldUpgradeStart.c \
+	api/Esys_FirmwareRead.c \
+	api/Esys_FlushContext.c \
+	api/Esys_GetCapability.c \
+	api/Esys_GetCommandAuditDigest.c \
+	api/Esys_GetRandom.c \
+	api/Esys_GetSessionAuditDigest.c \
+	api/Esys_GetTestResult.c \
+	api/Esys_GetTime.c \
+	api/Esys_Hash.c \
+	api/Esys_HashSequenceStart.c \
+	api/Esys_HierarchyChangeAuth.c \
+	api/Esys_HierarchyControl.c \
+	api/Esys_HMAC_Start.c \
+	api/Esys_HMAC.c \
+	api/Esys_Import.c \
+	api/Esys_IncrementalSelfTest.c \
+	api/Esys_Load.c \
+	api/Esys_LoadExternal.c \
+	api/Esys_MAC_Start.c \
+	api/Esys_MAC.c \
+	api/Esys_MakeCredential.c \
+	api/Esys_NV_Certify.c \
+	api/Esys_NV_ChangeAuth.c \
+	api/Esys_NV_DefineSpace.c \
+	api/Esys_NV_Extend.c \
+	api/Esys_NV_GlobalWriteLock.c \
+	api/Esys_NV_Increment.c \
+	api/Esys_NV_Read.c \
+	api/Esys_NV_ReadLock.c \
+	api/Esys_NV_ReadPublic.c \
+	api/Esys_NV_SetBits.c \
+	api/Esys_NV_UndefineSpace.c \
+	api/Esys_NV_UndefineSpaceSpecial.c \
+	api/Esys_NV_Write.c \
+	api/Esys_NV_WriteLock.c \
+	api/Esys_ObjectChangeAuth.c \
+	api/Esys_PCR_Allocate.c \
+	api/Esys_PCR_Event.c \
+	api/Esys_PCR_Extend.c \
+	api/Esys_PCR_Read.c \
+	api/Esys_PCR_Reset.c \
+	api/Esys_PCR_SetAuthPolicy.c \
+	api/Esys_PCR_SetAuthValue.c \
+	api/Esys_Policy_AC_SendSelect.c \
+	api/Esys_PolicyAuthorize.c \
+	api/Esys_PolicyAuthorizeNV.c \
+	api/Esys_PolicyAuthValue.c \
+	api/Esys_PolicyCommandCode.c \
+	api/Esys_PolicyCounterTimer.c \
+	api/Esys_PolicyCpHash.c \
+	api/Esys_PolicyDuplicationSelect.c \
+	api/Esys_PolicyGetDigest.c \
+	api/Esys_PolicyLocality.c \
+	api/Esys_PolicyNameHash.c \
+	api/Esys_PolicyNV.c \
+	api/Esys_PolicyNvWritten.c \
+	api/Esys_PolicyOR.c \
+	api/Esys_PolicyPassword.c \
+	api/Esys_PolicyPCR.c \
+	api/Esys_PolicyPhysicalPresence.c \
+	api/Esys_PolicyRestart.c \
+	api/Esys_PolicySecret.c \
+	api/Esys_PolicySigned.c \
+	api/Esys_PolicyTemplate.c \
+	api/Esys_PolicyTicket.c \
+	api/Esys_PP_Commands.c \
+	api/Esys_Quote.c \
+	api/Esys_ReadClock.c \
+	api/Esys_ReadPublic.c \
+	api/Esys_Rewrap.c \
+	api/Esys_RSA_Decrypt.c \
+	api/Esys_RSA_Encrypt.c \
+	api/Esys_SelfTest.c \
+	api/Esys_SequenceComplete.c \
+	api/Esys_SequenceUpdate.c \
+	api/Esys_SetAlgorithmSet.c \
+	api/Esys_SetCommandCodeAuditStatus.c \
+	api/Esys_SetPrimaryPolicy.c \
+	api/Esys_Shutdown.c \
+	api/Esys_Sign.c \
+	api/Esys_StartAuthSession.c \
+	api/Esys_Startup.c \
+	api/Esys_StirRandom.c \
+	api/Esys_TestParms.c \
+	api/Esys_Unseal.c \
+	api/Esys_Vendor_TCG_Test.c \
+	api/Esys_VerifySignature.c \
+	api/Esys_ZGen_2Phase.c \
+	esys_context.c \
+	esys_crypto_ossl.c \
+	esys_crypto.c \
+	esys_free.c \
+	esys_iutil.c \
+	esys_mu.c \
+	esys_tr.c
+TSS_ESYS_OBJS = $(TSS_ESYS_SRCS:%.c=$(TSS_ESYS_DIR)/%.o)
+$(TSS_ESYS_OBJS) := CPPFLAGS += -I$(TSS_ESYS_DIR)
+$(TSS_ESYS_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-esys.map
+$(TSS_ESYS_LIB) := LDLIBS += $(UTIL_LIB) -ltss2-sys -ltss2-mu -lcrypto
+
+TSS_RC_DIR = $(SRC)/tss2-rc
+TSS_RC_LIB = $(LIBDIR)/libtss2-rc.so
+TSS_RC_SRCS = tss2_rc.c
+TSS_RC_OBJS = $(TSS_RC_SRCS:%.c=$(TSS_RC_DIR)/%.o)
+$(TSS_RC_OBJS) := CPPFLAGS += -I$(TSS_RC_DIR)
+$(TSS_RC_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-rc.map
+$(TSS_RC_LIB) := LDLIBS += $(UTIL_LIB)
+
+TSS_FAPI_DIR = $(SRC)/tss2-fapi
+TSS_FAPI_LIB = $(LIBDIR)/libtss2-fapi.so
+TSS_FAPI_SRCS = \
+	ifapi_helpers.c \
+	tpm_json_deserialize.c \
+	ifapi_curl.c \
+	ifapi_policy_json_serialize.c \
+	ifapi_policyutil_execute.c \
+	ifapi_policy_json_deserialize.c \
+	fapi_crypto.c \
+	ifapi_policy_store.c \
+	ifapi_policy_execute.c \
+	ifapi_json_eventlog_serialize.c \
+	ifapi_json_deserialize.c \
+	ifapi_policy.c \
+	tpm_json_serialize.c \
+	ifapi_profiles.c \
+	ifapi_eventlog_system.c \
+	ifapi_config.c \
+	fapi_util.c \
+	ifapi_eventlog.c \
+	ifapi_json_serialize.c \
+	ifapi_keystore.c \
+	ifapi_get_web_cert.c \
+	ifapi_policy_callbacks.c \
+	api/Fapi_PcrExtend.c \
+	api/Fapi_NvExtend.c \
+	api/Fapi_NvRead.c \
+	api/Fapi_Sign.c \
+	api/Fapi_GetTpmBlobs.c \
+	api/Fapi_List.c \
+	api/Fapi_GetDescription.c \
+	api/Fapi_GetInfo.c \
+	api/Fapi_CreateSeal.c \
+	api/Fapi_Free.c \
+	api/Fapi_ChangeAuth.c \
+	api/Fapi_ExportKey.c \
+	api/Fapi_PcrRead.c \
+	api/Fapi_GetTcti.c \
+	api/Fapi_Provision.c \
+	api/Fapi_AuthorizePolicy.c \
+	api/Fapi_GetCertificate.c \
+	api/Fapi_Delete.c \
+	api/Fapi_CreateNv.c \
+	api/Fapi_GetPollHandles.c \
+	api/Fapi_WriteAuthorizeNV.c \
+	api/Fapi_Unseal.c \
+	api/Fapi_Quote.c \
+	api/Fapi_Initialize.c \
+	api/Fapi_GetPlatformCertificates.c \
+	api/Fapi_GetRandom.c \
+	api/Fapi_SetAppData.c \
+	api/Fapi_VerifySignature.c \
+	api/Fapi_GetEsysBlob.c \
+	api/Fapi_SetDescription.c \
+	api/Fapi_ExportPolicy.c \
+	api/Fapi_NvWrite.c \
+	api/Fapi_SetCertificate.c \
+	api/Fapi_VerifyQuote.c \
+	api/Fapi_Finalize.c \
+	api/Fapi_Encrypt.c \
+	api/Fapi_Decrypt.c \
+	api/Fapi_NvSetBits.c \
+	api/Fapi_GetAppData.c \
+	api/Fapi_CreateKey.c \
+	api/Fapi_Import.c \
+	api/Fapi_NvIncrement.c \
+	api/fapi_callback.c \
+	ifapi_policy_instantiate.c \
+	ifapi_ima_eventlog.c \
+	ifapi_policy_calculate.c \
+	ifapi_io.c
+TSS_FAPI_OBJS = $(TSS_FAPI_SRCS:%.c=$(TSS_FAPI_DIR)/%.o)
+$(TSS_FAPI_OBJS) := CPPFLAGS += -D SYSCONFDIR=\"/etc\"
+$(TSS_FAPI_OBJS) := CPPFLAGS += -D PACKAGE_STRING=\"/tpm2-tss\ 4.0.1-80-gede63dd1-dirty\"
+$(TSS_FAPI_OBJS) := CPPFLAGS += -I$(TSS_FAPI_DIR)
+$(TSS_FAPI_OBJS) := CPPFLAGS += -I/opt/ooce/include
+$(TSS_FAPI_LIB) := LDFLAGS  += -L/opt/ooce/lib/amd64 -R/opt/oocelib/amd64
+$(TSS_FAPI_LIB) := LDFLAGS += -Wl,-M $(PWD)/lib/tss2-fapi.map
+$(TSS_FAPI_LIB) := LBLIBS += $(UTIL_LIB) -ljson-c -luuid
+
+TSS_POLICY_DIR = $(SRC)/tss2-policy
+TSS_POLICY_LIB = $(LIBDIR)/libtss2-policy.so
+TSS_POLICY_SRCS = tss2_policy.c
+TSS_POLICY_OBJS = $(TSS_POLICY_SRCS:%.c=$(TSS_POLICY_DIR)/%.o)
+$(TSS_POLICY_OBJS) := CPPFLAGS += -I$(TSS_POLICY_DIR) -I$(TSS_FAPI_DIR)
+$(TSS_POLICY_OBJS) := CPPFLAGS += -I/opt/ooce/include
+$(TSS_POLICY_LIB) := LDFLAGS  += -L/opt/ooce/lib/amd64 -R/opt/oocelib/amd64
+$(TSS_POLICY_LIB) := LDFLAGS  += -Wl,-M $(PWD)/lib/tss2-policy.map
+$(TSS_POLICY_LIB) := LDLIBS += $(UTIL_LIB) -ljson-c
+
+# Build Rules
+
+all: \
+	$(UTIL_LIB) \
+	$(TSS_MU_LIB) \
+	$(TSS_SYS_LIB) \
+	$(TSS_ESYS_LIB) \
+	$(TSS_RC_LIB) \
+	$(TSS_FAPI_LIB) \
+	$(TSS_POLICY_LIB)
+
+clean:
+	$(RM) -f \
+		$(UTIL_OBJS) $(UTIL_LIB) \
+		$(TSS_MU_OBJS) $(TSS_MU_LIB) \
+		$(TSS_RC_OBJS) $(TSS_RC_LIB) \
+		$(TSS_FAPI_OBJS) $(TSS_FAPI_LIB) \
+		$(TSS_POLICY_OBJS) $(TSS_POLICY_LIB)
+
+$(LIBDIR):
+	mkdir $@
+
+$(UTIL_LIB): $(LIBDIR)
+$(TSS_MU_LIB): $(LIBDIR)
+$(TSS_SYS_LIB): $(LIBDIR)
+$(TSS_ESYS_LIB): $(LIBDIR)
+$(TSS_FAPI_LIB): $(LIBDIR)
+$(TSS_RC_LIB): $(LIBDIR)
+
+$(TSS_MU_LIB): $(UTIL_LIB)
+$(TSS_SYS_LIB): $(UTIL_LIB) $(TSS_MU_LIB)
+$(TSS_ESYS_LIB): $(UTIL_LIB) $(TSS_SYS_LIB)
+$(TSS_FAPI_LIB): $(UTIL_LIB) 
+$(TSS_RC_LIB): $(UTIL_LIB) 
+
+$(UTIL_DIR)/log.o: $(UTIL_DIR)/log.h
+$(UTIL_DIR)/key-value-parse.o: $(UTIL_DIR)/log.h $(UTIL_DIR)/key-value-parse.h
+$(UTIL_LIB): $(UTIL_OBJS)
+	$(AR) $(ARFLAGS) $@ $(UTIL_OBJS)
+
+$(TSS_MU_LIB): $(TSS_MU_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_MU_OBJS) $(LDFLAGS) $(LDLIBS)
+
+#$(TSS_TCTI_LIB): $(TSS_TCTI_OBJS) $(UTIL_LIB)
+#	$(CC) -shared -o $@ $(TSS_TCTI_OBJS) $(LDFLAGS) $(LDLIBS)
+
+$(TSS_SYS_LIB): $(TSS_SYS_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_SYS_OBJS) $(LDFLAGS) $(LDLIBS)
+
+$(TSS_ESYS_LIB): $(TSS_ESYS_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_ESYS_OBJS) $(LDFLAGS) $(LDLIBS)
+
+$(TSS_FAPI_LIB): $(TSS_FAPI_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_FAPI_OBJS) $(LDFLAGS) $(LDLIBS)
+
+$(TSS_RC_LIB): $(TSS_RC_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_RC_OBJS) $(LDFLAGS) $(LDLIBS)
+
+$(TSS_POLICY_LIB): $(TSS_POLICY_OBJS) $(UTIL_LIB)
+	$(CC) -shared -o $@ $(TSS_POLICY_OBJS) $(LDFLAGS) $(LDLIBS)
+
