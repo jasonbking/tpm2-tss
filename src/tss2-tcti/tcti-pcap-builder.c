@@ -24,9 +24,12 @@
 #define LOGMODULE tcti
 #include "util/log.h"
 
-#ifdef __FreeBSD__
+#if defined (__FreeBSD__)
 #define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC
+#elif defined(__illumos__)
+#define	CLOCK_MONOTONIC_RAW CLOCK_HIGHRES
 #endif
+
 
 /* constants used */
 #define PCAP_MAJOR                          0x0001
