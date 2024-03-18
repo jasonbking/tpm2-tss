@@ -45,6 +45,10 @@ case "${host_os}" in
         HOSTOS='BSD'
         LIBSOCKET_LDFLAGS=""
         ;;
+    *solaris* | *illumos*)
+	HOSTOS='Solaris'
+	LIBSOCKET_LDFLAGS="-lsocket -lnsl"
+	;;
     *)
         #Assume linux
         HOSTOS='Linux'
